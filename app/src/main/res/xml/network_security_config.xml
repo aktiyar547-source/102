@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The legacy backend is plain HTTP and the server address is configurable from the
+  Settings screen, so cleartext cannot be restricted to a fixed allow-list.
+  Switch this to false (and use an https:// base URL) once the server supports TLS.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

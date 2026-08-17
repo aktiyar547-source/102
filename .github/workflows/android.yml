@@ -1,0 +1,69 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+# Pushing twice in quick succession should not leave the first build burning a
+# runner for twenty minutes to produce an APK nobody wants.
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # Caches the Gradle distribution AND the dependency cache. The first run in
+      # a new repository downloads ~600 MB of Compose, CameraX, ML Kit, Hilt and
+      # Room; every run after this reuses it.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
+      # The wrapper jar is binary and not committed, so it is generated once.
+      - name: Ensure Gradle wrapper
+        run: gradle wrapper --gradle-version 8.9
+
+      # APK first: a passing compile always yields a downloadable artifact, even
+      # if a later test or lint check fails.
+      - name: Assemble debug APK
+        run: ./gradlew assembleDevDebug --build-cache --no-daemon
+
+      - name: Upload APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mecrc-dev-debug-apk
+          path: app/build/outputs/apk/dev/debug/*.apk
+          if-no-files-found: warn
+
+      - name: Unit tests (ISO 6346 oracle, golden payload, wire compatibility, retention)
+        run: ./gradlew testDevDebugUnitTest --build-cache --no-daemon
+
+      # Lint reports quality warnings; it must never block shipping a debug APK.
+      - name: Android Lint
+        continue-on-error: true
+        run: ./gradlew lintDevDebug --build-cache --no-daemon
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: app/build/reports/
+          if-no-files-found: ignore

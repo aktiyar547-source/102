@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- App-scoped external files (OCRimages/...). Shared with the camera app via FileProvider. -->
+    <external-files-path name="ocr_images" path="OCRimages/" />
+    <external-files-path name="captures" path="captures/" />
+</paths>

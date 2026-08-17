@@ -1,0 +1,5 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base Material3 theme. The legacy blue action-bar (#0000FF) is applied as a
+         color token in the Compose theme, not here, so styling stays modern. -->
+    <style name="Theme.MECRC" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
